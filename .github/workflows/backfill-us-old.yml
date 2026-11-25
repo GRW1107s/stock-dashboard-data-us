@@ -1,0 +1,28 @@
+name: backfill-us-old
+
+on:
+  schedule:
+    - cron: '23 */6 * * 1-5'
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+jobs:
+  backfill:
+    runs-on: ubuntu-latest
+    timeout-minutes: 180
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+      - name: Backfill US snapshots 1996-2016
+        run: python scripts/backfill_us_old.py
+      - name: Commit data
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add -A -- '*.json'
+          git diff --cached --quiet || git commit -m "Backfill US snapshots (1996-2016)"
+          git push
